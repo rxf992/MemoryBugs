@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mStartAllocationButton = (Button) findViewById(R.id.btn_allocation);
         mStartAllocationButton.setOnClickListener(this);
+
     }
 
     @Override
@@ -54,13 +55,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void startB() {
-        sTextView = null;//leak1 另一种改法
+
+//        sTextView = null;//leak1 另一种改法
         finish();
         startActivity(new Intent(this, ActivityB.class));
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 System.out.println("post delayed may leak");//没有观察到leak发生
+                sTextView.setText("post delayed may leak");//Android Lint也没有提示警告
             }
         }, 5000);
         Toast.makeText(this, "请注意查看通知栏LeakMemory", Toast.LENGTH_SHORT).show();
@@ -75,3 +78,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 }
+/*
+* Reference
+* http://www.bkjia.com/Androidjc/904357.html
+* http://www.jcodecraeer.com/a/anzhuokaifa/androidkaifa/2014/1123/2047.html
+* http://www.jcodecraeer.com/a/anzhuokaifa/androidkaifa/2015/0511/2861.html
+* */
