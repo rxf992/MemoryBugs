@@ -14,7 +14,8 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private static TextView sTextView;
+//    private static TextView sTextView;//Leak1 使用静态变量，则在start 新的activity的时候，sTextView仍然指向有效，而这个最终导致了整个mainactivity的instance都不能释放
+    private TextView sTextView;
     private Button mStartBButton;
     private Button mStartAllocationButton;
 
@@ -53,12 +54,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void startB() {
+        sTextView = null;//leak1 另一种改法
         finish();
         startActivity(new Intent(this, ActivityB.class));
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                System.out.println("post delayed may leak");
+                System.out.println("post delayed may leak");//没有观察到leak发生
             }
         }, 5000);
         Toast.makeText(this, "请注意查看通知栏LeakMemory", Toast.LENGTH_SHORT).show();
@@ -67,7 +69,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void startAllocationLargeNumbersOfObjects() {
         Toast.makeText(this, "请注意查看MemoryMonitor 以及AllocationTracker", Toast.LENGTH_SHORT).show();
         for (int i = 0; i < 10000; i++) {
-            Rect rect = new Rect(0, 0, 100, 100);
+            Rect rect = new Rect(0, 0, 100, 100);//这段代码创建了多个Rect对象，会造成内存上升，但并不会发生内存泄漏，通过GC可以释放。
+            //正常情况下这么写代码很少见。一个常见的错误例子是在listview 的getView里面每次都申请一个view而不是复用。
             System.out.println("-------: " + rect.width());
         }
     }
